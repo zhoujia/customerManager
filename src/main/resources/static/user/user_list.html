@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>user_list</title>
+    <link rel="stylesheet" type="text/css" href="http://www.jeasyui.com/easyui/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="http://www.jeasyui.com/easyui/themes/icon.css">
+
+    <script src="/easyui/jquery.min.js"></script>
+    <script src="/easyui/jquery.easyui.min.js"></script>
+    <script src="/easyui/jquery.easyui.mobile.js"></script>
+    <script src="/easyui/easyloader.js"></script>
+    <script language="JavaScript">
+        function initUser() {
+            $('#user_grid').datagrid({
+                title:'用户列表',
+                toolbar: '#tb',
+                method:'get',
+                url:'/user/list_data',
+                saveUrl: 'save_user.php',
+                updateUrl: 'update_user.php',
+                destroyUrl: 'destroy_user.php',
+                queryParams: {
+                    userName: '',
+                    phone: ''
+                },
+                pagination:true,
+                pageNumber:1,
+                pageSize:10,
+                striped:true,
+                columns:[[
+                    {field:'id',title:'id',hidden:true},
+                    {field:'cardId',title:'cardId',hidden:true},
+                    {field:'userName',title:'用户名',width:100},
+                    {field:'phone',title:'手机号',width:100},
+                    {field:'realName',title:'真实姓名',width:100,align:'right'},
+                    {field:'cardName',title:'卡片',width:100,align:'right'},
+                    {field:'times',title:'理发次数',width:100,align:'right'},
+                    {field:'leftMoney',title:'剩余金额',width:100,align:'right'},
+                    {field:'action',title:'操作',width:200,align:'center',
+                        formatter:function(value,row,index){
+                            if (row.editing){
+                                var s = '<a href="#" onclick="saverow(this)">保存</a> ';
+                                var c = '<a href="#" onclick="cancelrow(this)">Cancel</a>';
+                                return s+c;
+                            } else {
+                                var e = '<a href="#" onclick="minusOne('+row.id+','+row.cardId+')">次数减一</a>  ';
+                                var d = '<a href="#" onclick="bindVipCard('+row.id+')">绑定 vip 卡片</a>';
+                                return e+d;
+                            }
+                        }
+                    }]
+                ]
+
+            });
+
+            //设置分页控件
+            var p = $('#user_grid').datagrid('getPager');
+            $(p).pagination({
+                pageSize: 10,//每页显示的记录条数，默认为10
+                pageList: [5,10,15],//可以设置每页记录条数的列表
+                beforePageText: '第',//页数文本框前显示的汉字
+                afterPageText: '页    共 {pages} 页',
+                displayMsg: '当前显示 {from} - {to} 条记录   共 {total} 条记录'
+                /*onBeforeRefresh:function(){
+                    $(this).pagination('loading');
+                    alert('before refresh');
+                    $(this).pagination('loaded');
+                }*/
+            });
+        }
+
+        function minusOne(userId,cardId) {
+            //alert("理发次数减一"+userId+ "  " + cardId);
+            if(confirm("确定用户已经理发完毕"))
+            $.ajax({
+                method:'post',
+                data:{
+                    userId:userId,
+                    cardId:cardId
+                },
+                url:'/user/minusOne',
+                success:function(data){
+                    // 处理成功回调
+                    $('#user_grid').datagrid('reload');//刷新数据
+                },
+                error:function(a,b,c){
+                    alert("请求失败："+b);
+                }
+            });
+
+        }
+
+        function bindVipCard(userId) {
+            openAddCardDialog(userId);
+        }
+
+        function doSearch(){
+            $('#user_grid').datagrid('load',{
+                userName: $('#userName').val(),
+                phone: $('#phone').val()
+            });
+        }
+
+        function openAddCardDialog(userId) {
+            $('#bind_card_dd').dialog({
+                title: '绑定卡片',
+                width: 400,
+                height: 200,
+                closed: false,
+                cache: false,
+                href: 'bind_vip_card.html',
+                modal: true,
+                onLoad: function () {
+                    $('#vip_card').combobox({
+                        method:'get',
+                        url:'/card/getAllCards',
+                        valueField:'id',
+                        textField:'text'
+                    });
+                },
+                buttons:[{
+                    text:'Save',
+                    handler:function(){
+                        var cardId = $('#vip_card').val();
+                        $.ajax({
+                            method:'post',
+                            data:{
+                                userId:userId,
+                                cardId:cardId
+                            },
+                            url:'/user/bindUserCard',
+                            success:function(data){
+                                // 处理成功回调
+                                $('#user_grid').datagrid('reload');//刷新数据
+                                $('#bind_card_dd').dialog('close');//关闭添加窗口
+                            },
+                            error:function(a,b,c){
+                                alert("请求失败："+b);
+                            }
+                        });
+                    }
+                },{
+                    text:'Close',
+                    handler:function(){$('#dd').dialog('close')}
+                }]
+            });
+            //$('#dd').dialog('refresh', 'new_content.php');
+        }
+
+        function openDialog() {
+            $('#dd').dialog({
+                title: '添加用户',
+                width: 400,
+                height: 200,
+                closed: false,
+                cache: false,
+                href: 'add_user.html',
+                modal: true,
+                buttons:[{
+                    text:'保存',
+                    handler:function(){
+                        //$('#user_add_from').submit();
+                        $('#user_add_from').form('submit', {
+                            onSubmit: function(){
+                                // do some check
+                                // return false to prevent submit;
+                            },
+                            success:function(data){
+                                var data = eval('(' + data + ')'); // change the JSON string to javascript object
+                                //console.log(data);
+                                if (data.retCode === "000000"){
+                                    $('#user_grid').datagrid('reload');//刷新数据
+                                    $('#dd').dialog('close');//关闭添加窗口
+                                }
+                            }
+                        });
+                    }
+                },{
+                    text:'关闭',
+                    handler:function(){$('#dd').dialog('close')}
+                }]
+            });
+            //$('#dd').dialog('refresh', 'new_content.php');
+        }
+
+        $(function(){
+            initUser();
+
+            //initMenu();
+            //$("#user_sm").load("/public/menu.html");
+        });
+
+
+
+    </script>
+</head>
+<body  >
+
+    <div id="tb" style="padding:3px">
+        <div style="margin-bottom:5px">
+            <a href="#" onclick="openDialog()" class="easyui-linkbutton" iconCls="icon-add" plain="true"></a>
+            <a href="#" onclick="$('#user_grid').datagrid('editRow')" class="easyui-linkbutton" iconCls="icon-edit" plain="true"></a>
+            <a href="#" onclick="$('#user_grid').datagrid('saveRow')" class="easyui-linkbutton" iconCls="icon-save" plain="true"></a>
+            <a href="#" onclick="$('#user_grid').datagrid('cutRow')" class="easyui-linkbutton" iconCls="icon-cut" plain="true"></a>
+            <a href="#" onclick="$('#user_grid').datagrid('removeRow')" class="easyui-linkbutton" iconCls="icon-remove" plain="true"></a>
+        </div>
+
+        <div>
+            <span>用户名:</span>
+            <input id="userName" style="line-height:26px;border:1px solid #ccc">
+            <span>手机号:</span>
+            <input id="phone" style="line-height:26px;border:1px solid #ccc">
+
+            <a href="#" class="easyui-linkbutton" plain="true" onclick="doSearch()">Search</a>
+        </div>
+    </div>
+    <table id="user_grid">
+
+    </table>
+
+    <div id="dd">
+
+    </div>
+
+    <div id="bind_card_dd">
+
+    </div>
+
+</body>
+
+
+</html>

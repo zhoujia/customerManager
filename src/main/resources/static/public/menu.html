@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        #sm{float: left}
+    </style>
+    <script>
+        function addTab(title, url){
+            if ($('#main_tags').tabs('exists', title)){
+                $('#main_tags').tabs('select', title);
+            } else {
+                var content = '<iframe scrolling="auto" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>';
+                $('#main_tags').tabs('add',{
+                    title:title,
+                    content:content,
+                    closable:true
+                });
+            }
+        }
+        function initMenu() {
+            $('#sm').sidemenu({
+                data: [{
+                    text: '系统功能',
+                    iconCls: 'icon-more',
+                    state: 'open',
+                    children: [{
+                        id:'user_item',
+                        text: '用户',
+                        iconCls : 'icon-search'
+                    }, {
+                        id:'card_item',
+                        text: 'vip 卡片',
+                        iconCls : 'icon-search'
+                    }, {
+                        text: 'Option3',
+                        iconCls: 'icon-search'
+                    }]
+                }, {
+                    text: '系统设置',
+                    iconCls: 'icon-more',
+                    children: [{
+                        text: '权限设置',
+                        iconCls: 'icon-search'
+                    }, {
+                        text: '菜单设置',
+                        iconCls: 'icon-search'
+                    }, {
+                        text: 'Option6',
+                        iconCls: 'icon-search'
+                    }]
+                }],
+                onSelect: function (item) {
+                    // alert(item.id);
+                    if (item.id === "user_item") {
+                        addTab("用户","/user/list");
+                    }
+                    if (item.id === "card_item") {
+                        addTab("vip 卡","/card/list");
+                    }
+                }
+                
+            });
+        }
+        $(function(){
+            initMenu();
+        });
+    </script>
+</head>
+<body>
+    <div id="sm" style="width:150px"></div>
+</body>
+</html>

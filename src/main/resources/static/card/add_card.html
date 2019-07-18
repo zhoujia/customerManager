@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>添加卡片</title>
+</head>
+<body>
+
+<form id="card_add_from" method="post" action="/card/add">
+
+    <table>
+        <tr><td>卡片名称:</td><td><input name="cardName"/></td></tr>
+        <tr><td>理发次数:</td><td><input name="cardTimes"/></td></tr>
+        <tr><td>优惠折扣:</td><td><input name="discount"/></td></tr>
+        <tr><td>有效期:</td><td><input  id="startDate" name="startDate" type="text"/>-<input  id="endDate" name="endDate" type="text"/></td></tr>
+        <tr><td>备注:</td><td><textarea name="description" /></td></tr>
+    </table>
+
+</form>
+</body>
+
+</html>

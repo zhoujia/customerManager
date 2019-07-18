@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="http://www.jeasyui.com/easyui/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="http://www.jeasyui.com/easyui/themes/icon.css">
+
+    <script src="/easyui/jquery.min.js"></script>
+    <script src="/easyui/jquery.easyui.min.js"></script>
+    <script src="/easyui/jquery.easyui.mobile.js"></script>
+    <script src="/easyui/easyloader.js"></script>
+    <script language="JavaScript">
+        $(function(){
+            //加载右侧菜单栏
+            $("#user_sm").load("/public/menu.html");
+            $("#north_title").load("/public/head.html");
+        });
+    </script>
+</head>
+
+<body class="easyui-layout" >
+
+<div data-options="region:'north'" style="height:100px">
+    <div id="north_title" ></div>
+</div>
+<div data-options="region:'center'">
+
+    <div class="easyui-layout" data-options="fit:true">
+        <div data-options="region:'west',collapsed:false" style="width:150px">
+            <div id="user_sm" ></div>
+        </div>
+        <div data-options="region:'center'">
+            <div id="main_tags" class="easyui-tabs" style="height:580px;">
+                <div title="Home">
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+</body>
+</html>

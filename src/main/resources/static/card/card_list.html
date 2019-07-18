@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>vip 卡片</title>
+    <link rel="stylesheet" type="text/css" href="http://www.jeasyui.com/easyui/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="http://www.jeasyui.com/easyui/themes/icon.css">
+
+    <script src="/easyui/jquery.min.js"></script>
+    <script src="/easyui/jquery.easyui.min.js"></script>
+    <script src="/easyui/jquery.easyui.mobile.js"></script>
+    <script src="/easyui/easyloader.js"></script>
+
+    <script language="JavaScript">
+        function initCard() {
+            $('#card_grid').datagrid({
+                title:'vip卡片列表',
+                toolbar: '#card_tb',
+                method:'get',
+                url:'/card/list_data',
+                pagination:true,
+                pageNumber:1,
+                pageSize:10,
+                striped:true,
+                columns:[[
+                    {field:'id',title:'id',hidden:true},
+                    {field:'cardName',title:'卡片名称',width:100},
+                    {field:'cardTimes',title:'理发次数',width:100},
+                    {field:'discount',title:'优惠折扣',width:100,align:'right'},
+                    {field:'lastTimes',title:'有效期',width:200,
+                        formatter:function(value,row,index){
+                            return UnixToDate(row.startDate/1000)+"---"+UnixToDate(row.endDate/1000);
+                        }
+                    },
+                    {field:'description',title:'备注',width:100},
+                    {field:'action',title:'操作',width:100,align:'center',
+                        formatter:function(value,row,index){
+                            return '<a href="#" onclick="delCard('+row.id+')">删除</a> ';
+                        }
+                    }]
+                ]
+
+            });
+
+            //设置分页控件
+            var p = $('#card_grid').datagrid('getPager');
+            $(p).pagination({
+                pageSize: 10,//每页显示的记录条数，默认为10
+                pageList: [5,10,15],//可以设置每页记录条数的列表
+                beforePageText: '第',//页数文本框前显示的汉字
+                afterPageText: '页    共 {pages} 页',
+                displayMsg: '当前显示 {from} - {to} 条记录   共 {total} 条记录'
+                /*onBeforeRefresh:function(){
+                    $(this).pagination('loading');
+                    alert('before refresh');
+                    $(this).pagination('loaded');
+                }*/
+            });
+        }
+
+        function doSearch(){
+            $('#card_grid').datagrid('load',{
+                cardName: $('#cardName').val()
+            });
+        }
+
+        function delCard(item) {
+            //console.log(item)
+            if(confirm("确定删除?"))
+            $.get("/card/del?cardId="+item,function(data,status){
+                //alert("Data: " + data + "\nStatus: " + status);
+                console.log(data);
+                if (status === "success" && data.retCode==="000000") {
+                    $('#card_grid').datagrid('load');
+                }
+            });
+        }
+
+        function openAddCardDialog() {
+            $('#card_dd').dialog({
+                title: '添加卡片',
+                width: 400,
+                height: 300,
+                closed: false,
+                cache: false,
+                href: 'add_card.html',
+                modal: true,
+                onLoad: function () {
+                    $('#startDate').datebox({
+                        required:true
+                        /*这个一直加载两遍,而且时间不一致,目前还没有找到原因
+                        formatter:function (date) {
+                            console.log(date);
+                            var y = date.getFullYear();
+                            var m = date.getMonth()+1;
+                            var d = date.getDate();
+                            return y+'-'+m+'-'+d;
+                        }*/
+                    });
+                    $('#endDate').datebox({
+                        required:true
+                    });
+                },
+                buttons:[{
+                    text:'Save',
+                    handler:function(){
+                        //$('#user_add_from').submit();
+                        //提交
+                        $('#card_add_from').form('submit', {
+                            onSubmit: function(){
+                                // do some check
+                                // return false to prevent submit;
+                            },
+                            success:function(data){
+                                var data = eval('(' + data + ')'); // change the JSON string to javascript object
+                                //console.log(data);
+                                if (data.retCode === "000000"){
+                                    $('#card_grid').datagrid('reload');//刷新数据
+                                    $('#card_dd').dialog('close');//关闭添加窗口
+                                }
+                            }
+                        });
+                    }
+                },{
+                    text:'Close',
+                    handler:function(){
+                        $('#card_dd').dialog('close')
+                    }
+                }]
+            });
+            //$('#dd').dialog('refresh', 'new_content.php');
+        }
+
+        $(function(){
+            initCard();
+        });
+
+        /**
+         * @return {string}
+         */
+        function UnixToDate (unixTime, isFull, timeZone) {
+            if (typeof (timeZone) == 'number')
+            {
+                unixTime = parseInt(unixTime) + parseInt(timeZone) * 60 * 60;
+            }
+            var time = new Date(unixTime * 1000);
+            var ymdhis = "";
+            ymdhis += time.getUTCFullYear() + "-";
+            ymdhis += ((time.getUTCMonth()+1) < 10 ? "0" + (time.getUTCMonth()+1) : (time.getUTCMonth()+1)) + "-";
+            ymdhis += (time.getUTCDate() < 10 ? "0" + time.getUTCDate() : time.getUTCDate()) + " ";
+            /*ymdhis += (time.getHours() < 10 ? "0" + time.getHours() : time.getHours()) + ":";
+            ymdhis += (time.getUTCMinutes() < 10 ? "0" + time.getUTCMinutes() : time.getUTCMinutes()) + ":";
+            ymdhis += (time.getUTCSeconds() < 10 ? "0" + time.getUTCSeconds() : time.getUTCSeconds());*/
+            if (isFull === true)
+            {
+                ymdhis += (time.getHours() < 10 ? "0" + time.getHours() : time.getHours()) + ":";
+                ymdhis += (time.getUTCMinutes() < 10 ? "0" + time.getUTCMinutes() : time.getUTCMinutes()) + ":";
+                ymdhis += (time.getUTCSeconds() < 10 ? "0" + time.getUTCSeconds() : time.getUTCSeconds());
+            }
+            return ymdhis;
+        }
+
+
+
+    </script>
+</head>
+<body>
+<div id="card_tb" style="padding:3px">
+    <div style="margin-bottom:5px">
+        <a href="#" onclick="openAddCardDialog()" class="easyui-linkbutton" iconCls="icon-add" plain="true"></a>
+        <a href="#" onclick="$('#card_grid').datagrid('editRow')" class="easyui-linkbutton" iconCls="icon-edit" plain="true"></a>
+        <a href="#" onclick="$('#card_grid').datagrid('saveRow')" class="easyui-linkbutton" iconCls="icon-save" plain="true"></a>
+        <a href="#" onclick="$('#card_grid').datagrid('cutRow')" class="easyui-linkbutton" iconCls="icon-cut" plain="true"></a>
+        <a href="#" onclick="$('#card_grid').datagrid('removeRow')" class="easyui-linkbutton" iconCls="icon-remove" plain="true"></a>
+    </div>
+
+    <div>
+        <span>卡名:</span>
+        <input id="cardName" style="line-height:26px;border:1px solid #ccc">
+
+        <a href="#" class="easyui-linkbutton" plain="true" onclick="doSearch()">Search</a>
+    </div>
+</div>
+<table id="card_grid">
+
+</table>
+
+<div id="card_dd">
+
+</div>
+</body>
+</html>
